@@ -29,24 +29,29 @@ if page == "Student Portal":
     st.markdown("<h3 style='text-align: center; color: #4B5563;'>Student Feedback Portal</h3>", unsafe_allow_html=True)
     st.write("---")
     
-    text = st.text_area('Enter Student Review / Feedback:', placeholder="Type feedback here (e.g., The campus wifi is very fast)...")
+    text = st.text_area('Enter Student Review / Feedback:', placeholder="Type feedback or recommendations here (e.g., The university should add more computers)...")
     
     if st.button('Submit Feedback'):
         if text.strip() == "":
             st.warning("Please enter some text first!")
         else:
-            # Prediction
-            pred = model.predict(vec.transform([text]))
-            sentiment_result = 'Positive' if pred[0] == 1 else 'Negative'
+            # Predict directly using the updated 3-class ML Model
+            pred = model.predict(vec.transform([text]))[0]
             
-            # Append to CSV file
+            # Map numerical predictions to text labels (0=Negative, 1=Positive, 2=Recommendation)
+            if pred == 1:
+                sentiment_result = 'Positive'
+                st.success("🟢 Thank you! Your positive feedback has been recorded.")
+            elif pred == 0:
+                sentiment_result = 'Negative'
+                st.error("🔴 Thank you! Your feedback has been recorded for review.")
+            else:
+                sentiment_result = 'Recommendation'
+                st.info("🔵 Thank you! Your recommendation has been recorded for improvement.")
+            
+            # Append the result to the CSV file
             new_data = pd.DataFrame([[text, sentiment_result]], columns=['Feedback', 'Sentiment'])
             new_data.to_csv(CSV_FILE, mode='a', header=False, index=False)
-            
-            if sentiment_result == 'Positive':
-                st.success("🟢 Thank you! Your positive feedback has been recorded.")
-            else:
-                st.error("🔴 Thank you! Your feedback has been recorded for review.")
 
 # --- PAGE 2: Admin Dashboard ---
 elif page == "WKU Admin Dashboard":
@@ -64,12 +69,14 @@ elif page == "WKU Admin Dashboard":
         total_feedback = len(df)
         pos_count = len(df[df['Sentiment'] == 'Positive'])
         neg_count = len(df[df['Sentiment'] == 'Negative'])
+        rec_count = len(df[df['Sentiment'] == 'Recommendation'])
         
-        # Display Metrics
-        col1, col2, col3 = st.columns(3)
+        # Display Metrics across 4 columns
+        col1, col2, col3, col4 = st.columns(4)
         col1.metric("Total Feedbacks", total_feedback)
         col2.metric("Positive 🟢", pos_count)
         col3.metric("Negative 🔴", neg_count)
+        col4.metric("Recommendation 🔵", rec_count)
         
         st.write("---")
         
@@ -79,7 +86,7 @@ elif page == "WKU Admin Dashboard":
         with col_chart1:
             st.subheader("Sentiment Distribution")
             fig = px.pie(df, names='Sentiment', color='Sentiment',
-                         color_discrete_map={'Positive': '#22C55E', 'Negative': '#EF4444'})
+                         color_discrete_map={'Positive': '#22C55E', 'Negative': '#EF4444', 'Recommendation': '#3B82F6'})
             st.plotly_chart(fig, use_container_width=True)
             
         with col_chart2:
