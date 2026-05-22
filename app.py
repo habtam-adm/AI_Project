@@ -26,6 +26,10 @@ if not os.path.exists(CSV_FILE):
 st.sidebar.title("Navigation")
 page = st.sidebar.selectbox("Select Page", ["Student Portal", "WKU Admin Dashboard"])
 
+
+
+
+
 # --- PAGE 1: Student Portal ---
 if page == "Student Portal":
     st.markdown("<h1 style='text-align: center; color: #1E3A8A;'>🎓 Wolkite University</h1>", unsafe_allow_html=True)
